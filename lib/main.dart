@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
+import 'themes/app_theme.dart';
 
 void main() {
   runApp(const BelievePOS());
@@ -10,9 +11,11 @@ class BelievePOS extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      title: 'Believe POS',
+      theme: AppTheme.lightTheme,
+      home: const HomeScreen(),
     );
   }
 }
