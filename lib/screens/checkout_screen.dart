@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/cart_item.dart';
 import '../models/sale.dart';
 import '../services/cart_service.dart';
@@ -188,9 +187,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     saleDate: DateTime.now().toIso8601String(),
                   );
 
-                  final messenger = ScaffoldMessenger.of(context);
-                  final navigator = Navigator.of(context);
-
                   try {
                     await SalesService.saveSale(
                       sale: sale,
@@ -200,6 +196,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     CartService.clearCart();
 
                     if (!mounted) return;
+
+                    // ignore: use_build_context_synchronously
+                    final messenger = ScaffoldMessenger.of(context);
+                    // ignore: use_build_context_synchronously
+                    final navigator = Navigator.of(context);
 
                     messenger.showSnackBar(
                       const SnackBar(
@@ -212,6 +213,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     navigator.pop();
                   } catch (e) {
                     if (!mounted) return;
+
+                    // ignore: use_build_context_synchronously
+                    final messenger = ScaffoldMessenger.of(context);
 
                     messenger.showSnackBar(
                       SnackBar(

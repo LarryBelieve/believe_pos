@@ -2,6 +2,7 @@ class SaleItem {
   final int? id;
   final int saleId;
   final int productId;
+  final String productName;
   final int quantity;
   final double price;
 
@@ -9,6 +10,7 @@ class SaleItem {
     this.id,
     required this.saleId,
     required this.productId,
+    required this.productName,
     required this.quantity,
     required this.price,
   });
@@ -18,6 +20,7 @@ class SaleItem {
       'id': id,
       'saleId': saleId,
       'productId': productId,
+      'productName': productName,
       'quantity': quantity,
       'price': price,
     };
@@ -28,6 +31,7 @@ class SaleItem {
       id: map['id'],
       saleId: map['saleId'],
       productId: map['productId'],
+      productName: map['productName'],
       quantity: map['quantity'],
       price: map['price'],
     );

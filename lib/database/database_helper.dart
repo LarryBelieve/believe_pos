@@ -50,16 +50,17 @@ class DatabaseHelper {
 
     // Sale Items Table
     await db.execute('''
-      CREATE TABLE sale_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        saleId INTEGER NOT NULL,
-        productId INTEGER NOT NULL,
-        quantity INTEGER NOT NULL,
-        price REAL NOT NULL,
-        FOREIGN KEY (saleId) REFERENCES sales(id),
-        FOREIGN KEY (productId) REFERENCES products(id)
-      )
-    ''');
+CREATE TABLE sale_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  saleId INTEGER NOT NULL,
+  productId INTEGER NOT NULL,
+  productName TEXT NOT NULL,
+  quantity INTEGER NOT NULL,
+  price REAL NOT NULL,
+  FOREIGN KEY (saleId) REFERENCES sales(id),
+  FOREIGN KEY (productId) REFERENCES products(id)
+)
+''');
   }
 
   Future close() async {

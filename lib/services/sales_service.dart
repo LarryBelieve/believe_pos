@@ -24,6 +24,7 @@ class SalesService {
           SaleItem(
             saleId: saleId,
             productId: item.product.id!,
+            productName: item.product.name,
             quantity: item.quantity,
             price: item.product.price,
           ).toMap(),
