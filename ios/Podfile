@@ -1,5 +1,8 @@
+source 'https://cdn.cocoapods.org/'
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '13.0'
+ENV['SSL_CERT_FILE'] ||= '/etc/ssl/cert.pem'
+ENV['SSL_CERT_DIR'] ||= '/etc/ssl/certs'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {

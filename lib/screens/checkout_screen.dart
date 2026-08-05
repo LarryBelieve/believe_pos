@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../models/cart_item.dart';
+import '../models/sale.dart';
 import '../services/cart_service.dart';
+import '../services/sales_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -15,17 +18,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String paymentMethod = "Cash";
 
   @override
+  void dispose() {
+    amountController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final List<CartItem> cartItems = CartService.cartItems.value;
 
     final double total = cartItems.fold(
-      0,
+      0.0,
       (sum, item) => sum + item.total,
     );
 
-    double amountReceived = double.tryParse(amountController.text) ?? 0;
+    final double amountReceived = double.tryParse(amountController.text) ?? 0;
 
-    double change = amountReceived - total;
+    final double change = amountReceived - total;
 
     return Scaffold(
       appBar: AppBar(
@@ -110,7 +119,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 20),
             TextField(
               controller: amountController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: "Amount Received",
                 border: OutlineInputBorder(),
@@ -150,29 +161,63 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   "Complete Sale",
                   style: TextStyle(fontSize: 18),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  if (cartItems.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Cart is empty."),
+                      ),
+                    );
+                    return;
+                  }
+
                   if (paymentMethod == "Cash" && amountReceived < total) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                          "Amount received is less than total.",
+                          "Amount received is less than the total.",
                         ),
                       ),
                     );
                     return;
                   }
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Sale completed successfully!",
-                      ),
-                    ),
+                  final sale = Sale(
+                    total: total,
+                    paymentMethod: paymentMethod,
+                    saleDate: DateTime.now().toIso8601String(),
                   );
 
-                  CartService.clearCart();
+                  try {
+                    await SalesService.saveSale(
+                      sale: sale,
+                      cartItems: cartItems,
+                    );
 
-                  Navigator.pop(context);
+                    CartService.clearCart();
+
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "Sale completed successfully!",
+                        ),
+                      ),
+                    );
+
+                    Navigator.pop(context);
+                  } catch (e) {
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "Error completing sale: $e",
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
             ),
