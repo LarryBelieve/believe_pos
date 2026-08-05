@@ -188,6 +188,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     saleDate: DateTime.now().toIso8601String(),
                   );
 
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
+
                   try {
                     await SalesService.saveSale(
                       sale: sale,
@@ -198,7 +201,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     if (!mounted) return;
 
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text(
                           "Sale completed successfully!",
@@ -206,11 +209,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     );
 
-                    Navigator.pop(context);
+                    navigator.pop();
                   } catch (e) {
                     if (!mounted) return;
 
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text(
                           "Error completing sale: $e",
