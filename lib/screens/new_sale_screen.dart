@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'checkout_screen.dart';
 import '../models/cart_item.dart';
 import '../services/product_service.dart';
 import '../services/cart_service.dart';
@@ -11,7 +12,7 @@ class NewSaleScreen extends StatefulWidget {
 }
 
 class _NewSaleScreenState extends State<NewSaleScreen> {
-  List products = <dynamic>[];
+  List products = [];
   bool isLoading = true;
   String searchQuery = '';
 
@@ -80,9 +81,13 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           ),
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
                 : filteredProducts.isEmpty
-                    ? const Center(child: Text('No products available'))
+                    ? const Center(
+                        child: Text("No products available"),
+                      )
                     : ListView.builder(
                         itemCount: filteredProducts.length,
                         itemBuilder: (context, index) {
@@ -185,8 +190,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                 "R${cartTotal.toStringAsFixed(2)}",
                                 style: const TextStyle(
                                   fontSize: 22,
-                                  fontWeight: FontWeight.bold,
                                   color: Colors.green,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
@@ -198,12 +203,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               onPressed: cartItems.isEmpty
                                   ? null
                                   : () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "Checkout coming soon!",
-                                          ),
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const CheckoutScreen(),
                                         ),
                                       );
                                     },
