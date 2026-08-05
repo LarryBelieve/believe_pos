@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'products_screen.dart';
+
 import 'new_sale_screen.dart';
+import 'products_screen.dart';
+import 'sales_history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -32,11 +34,11 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 15),
               Text(
                 title,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -77,15 +79,14 @@ class HomeScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        color: Colors.green,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
@@ -100,7 +101,7 @@ class HomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const NewSaleScreen(),
+                          builder: (_) => const NewSaleScreen(),
                         ),
                       );
                     },
@@ -113,7 +114,20 @@ class HomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProductsScreen(),
+                          builder: (_) => const ProductsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  buildCard(
+                    context,
+                    Icons.receipt_long,
+                    "Sales History",
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SalesHistoryScreen(),
                         ),
                       );
                     },
@@ -138,6 +152,18 @@ class HomeScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text("Reports module coming soon"),
+                        ),
+                      );
+                    },
+                  ),
+                  buildCard(
+                    context,
+                    Icons.settings,
+                    "Settings",
+                    () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Settings module coming soon"),
                         ),
                       );
                     },
