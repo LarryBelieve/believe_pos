@@ -21,12 +21,13 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
     );
   }
 
   Future _createDB(Database db, int version) async {
+    // Products Table
     await db.execute('''
       CREATE TABLE products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,10 +37,33 @@ class DatabaseHelper {
         category TEXT NOT NULL
       )
     ''');
+
+    // Sales Table
+    await db.execute('''
+      CREATE TABLE sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        total REAL NOT NULL,
+        paymentMethod TEXT NOT NULL,
+        saleDate TEXT NOT NULL
+      )
+    ''');
+
+    // Sale Items Table
+    await db.execute('''
+      CREATE TABLE sale_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        saleId INTEGER NOT NULL,
+        productId INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        price REAL NOT NULL,
+        FOREIGN KEY (saleId) REFERENCES sales(id),
+        FOREIGN KEY (productId) REFERENCES products(id)
+      )
+    ''');
   }
 
   Future close() async {
     final db = await instance.database;
-    db.close();
+    await db.close();
   }
 }
