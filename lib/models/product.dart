@@ -4,6 +4,7 @@ class Product {
   final double price;
   final int quantity;
   final String category;
+  final String barcode;
 
   Product({
     this.id,
@@ -11,6 +12,7 @@ class Product {
     required this.price,
     required this.quantity,
     required this.category,
+    required this.barcode,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +22,7 @@ class Product {
       'price': price,
       'quantity': quantity,
       'category': category,
+      'barcode': barcode,
     };
   }
 
@@ -30,6 +33,7 @@ class Product {
       price: map['price'],
       quantity: map['quantity'],
       category: map['category'],
+      barcode: map['barcode'],
     );
   }
 }

@@ -14,12 +14,24 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
   final _categoryController = TextEditingController();
+  final _barcodeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    _quantityController.dispose();
+    _categoryController.dispose();
+    _barcodeController.dispose();
+    super.dispose();
+  }
 
   Future<void> _saveProduct() async {
     if (_nameController.text.isEmpty ||
         _priceController.text.isEmpty ||
         _quantityController.text.isEmpty ||
-        _categoryController.text.isEmpty) {
+        _categoryController.text.isEmpty ||
+        _barcodeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please fill in all fields"),
@@ -33,6 +45,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       price: double.parse(_priceController.text),
       quantity: int.parse(_quantityController.text),
       category: _categoryController.text,
+      barcode: _barcodeController.text,
     );
 
     await ProductService.addProduct(product);
@@ -80,6 +93,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: "Quantity",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _barcodeController,
+              decoration: const InputDecoration(
+                labelText: "Barcode",
                 border: OutlineInputBorder(),
               ),
             ),

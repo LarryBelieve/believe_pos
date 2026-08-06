@@ -24,6 +24,21 @@ class DashboardService {
       FROM sales
     ''');
 
-    return result.first['total'] as int;
+    return (result.first['total'] as num).toInt();
+  }
+
+  static Future<double> getAverageSale() async {
+    final db = await DatabaseHelper.instance.database;
+
+    final result = await db.rawQuery('''
+      SELECT AVG(total) AS averageSale
+      FROM sales
+    ''');
+
+    if (result.isNotEmpty && result.first['averageSale'] != null) {
+      return (result.first['averageSale'] as num).toDouble();
+    }
+
+    return 0.0;
   }
 }

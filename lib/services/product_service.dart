@@ -19,6 +19,23 @@ class ProductService {
     return result.map((e) => Product.fromMap(e)).toList();
   }
 
+  static Future<Product?> getProductByBarcode(String barcode) async {
+    final db = await DatabaseHelper.instance.database;
+
+    final result = await db.query(
+      'products',
+      where: 'barcode = ?',
+      whereArgs: [barcode],
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return Product.fromMap(result.first);
+  }
+
   static Future<int> deleteProduct(int id) async {
     final db = await DatabaseHelper.instance.database;
 

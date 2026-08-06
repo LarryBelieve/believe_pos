@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   double todaySales = 0;
   int totalTransactions = 0;
+  double averageSale = 0;
 
   @override
   void initState() {
@@ -25,12 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadDashboard() async {
     final sales = await DashboardService.getTodaySales();
     final transactions = await DashboardService.getTotalTransactions();
+    final average = await DashboardService.getAverageSale();
 
     if (!mounted) return;
 
     setState(() {
       todaySales = sales;
       totalTransactions = transactions;
+      averageSale = average;
     });
   }
 
@@ -86,18 +89,23 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 22,
+          ),
           child: Column(
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 18),
+                style: const TextStyle(
+                  fontSize: 18,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
@@ -133,6 +141,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   "Transactions",
                   totalTransactions.toString(),
                   Colors.blue,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                buildInfoCard(
+                  "Average Sale",
+                  "R${averageSale.toStringAsFixed(2)}",
+                  Colors.orange,
                 ),
               ],
             ),
@@ -193,7 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Customers module coming soon"),
+                        content: Text(
+                          "Customers module coming soon",
+                        ),
                       ),
                     );
                   },
@@ -205,7 +225,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Reports module coming soon"),
+                        content: Text(
+                          "Reports module coming soon",
+                        ),
                       ),
                     );
                   },
@@ -217,7 +239,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Settings module coming soon"),
+                        content: Text(
+                          "Settings module coming soon",
+                        ),
                       ),
                     );
                   },

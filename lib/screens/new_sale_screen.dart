@@ -3,6 +3,8 @@ import 'checkout_screen.dart';
 import '../models/cart_item.dart';
 import '../services/product_service.dart';
 import '../services/cart_service.dart';
+import 'barcode_scanner_screen.dart';
+import '../models/product.dart';
 
 class NewSaleScreen extends StatefulWidget {
   const NewSaleScreen({super.key});
@@ -20,6 +22,38 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   void initState() {
     super.initState();
     _loadProducts();
+  }
+
+  Future<void> _scanBarcode() async {
+    final barcode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const BarcodeScannerScreen(),
+      ),
+    );
+
+    if (barcode == null) return;
+
+    final Product? product = await ProductService.getProductByBarcode(barcode);
+
+    if (!mounted) return;
+
+    if (product == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Product not found."),
+        ),
+      );
+      return;
+    }
+
+    CartService.addToCart(product);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("${product.name} added to cart."),
+      ),
+    );
   }
 
   Future<void> _loadProducts() async {
@@ -46,6 +80,13 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("New Sale"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: "Scan Barcode",
+            onPressed: _scanBarcode,
+          ),
+        ],
       ),
       body: Column(
         children: [

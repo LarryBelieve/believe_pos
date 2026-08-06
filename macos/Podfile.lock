@@ -1,21 +1,27 @@
 PODS:
   - FlutterMacOS (1.0.0)
+  - mobile_scanner (5.2.3):
+    - FlutterMacOS
   - sqflite (0.0.3):
     - Flutter
     - FlutterMacOS
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - mobile_scanner (from `Flutter/ephemeral/.symlinks/plugins/mobile_scanner/macos`)
   - sqflite (from `Flutter/ephemeral/.symlinks/plugins/sqflite/darwin`)
 
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
+  mobile_scanner:
+    :path: Flutter/ephemeral/.symlinks/plugins/mobile_scanner/macos
   sqflite:
     :path: Flutter/ephemeral/.symlinks/plugins/sqflite/darwin
 
 SPEC CHECKSUMS:
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  mobile_scanner: bd1e7cd9b67b442f4d903747f4778e040513f860
   sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
 
 PODFILE CHECKSUM: 236401fc2c932af29a9fcf0e97baeeb2d750d367

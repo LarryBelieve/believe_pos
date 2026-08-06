@@ -21,8 +21,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -34,7 +35,8 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         price REAL NOT NULL,
         quantity INTEGER NOT NULL,
-        category TEXT NOT NULL
+        category TEXT NOT NULL,
+        barcode TEXT NOT NULL
       )
     ''');
 
@@ -50,17 +52,25 @@ class DatabaseHelper {
 
     // Sale Items Table
     await db.execute('''
-CREATE TABLE sale_items (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  saleId INTEGER NOT NULL,
-  productId INTEGER NOT NULL,
-  productName TEXT NOT NULL,
-  quantity INTEGER NOT NULL,
-  price REAL NOT NULL,
-  FOREIGN KEY (saleId) REFERENCES sales(id),
-  FOREIGN KEY (productId) REFERENCES products(id)
-)
-''');
+      CREATE TABLE sale_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        saleId INTEGER NOT NULL,
+        productId INTEGER NOT NULL,
+        productName TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        price REAL NOT NULL,
+        FOREIGN KEY (saleId) REFERENCES sales(id),
+        FOREIGN KEY (productId) REFERENCES products(id)
+      )
+    ''');
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE products ADD COLUMN barcode TEXT NOT NULL DEFAULT '';",
+      );
+    }
   }
 
   Future close() async {
