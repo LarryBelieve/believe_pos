@@ -5,6 +5,7 @@ import 'new_sale_screen.dart';
 import 'products_screen.dart';
 import 'sales_history_screen.dart';
 import 'customers_screen.dart';
+import 'suppliers_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -220,6 +221,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 buildCard(
                   context,
+                  Icons.settings,
+                  "Settings",
+                  () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Settings module coming soon"),
+                      ),
+                    );
+                  },
+                ),
+                buildCard(
+                  context,
                   Icons.bar_chart,
                   "Reports",
                   () {
@@ -234,14 +247,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 buildCard(
                   context,
-                  Icons.settings,
-                  "Settings",
+                  Icons.business,
+                  "Suppliers",
                   () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Settings module coming soon",
-                        ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SuppliersScreen(),
                       ),
                     );
                   },
