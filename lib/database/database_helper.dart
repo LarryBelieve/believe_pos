@@ -27,7 +27,7 @@ class DatabaseHelper {
     );
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
     // Products Table
     await db.execute('''
       CREATE TABLE products (
@@ -63,17 +63,44 @@ class DatabaseHelper {
         FOREIGN KEY (productId) REFERENCES products(id)
       )
     ''');
+
+    // Customers Table
+    await db.execute('''
+      CREATE TABLE customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        address TEXT NOT NULL
+      )
+    ''');
   }
 
-  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 3) {
+  Future<void> _onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
       await db.execute(
         "ALTER TABLE products ADD COLUMN barcode TEXT NOT NULL DEFAULT '';",
       );
     }
+
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          phone TEXT NOT NULL,
+          email TEXT NOT NULL,
+          address TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
-  Future close() async {
+  Future<void> close() async {
     final db = await instance.database;
     await db.close();
   }
