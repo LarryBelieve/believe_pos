@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'checkout_screen.dart';
 import '../models/cart_item.dart';
+import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/cart_service.dart';
 import 'barcode_scanner_screen.dart';
-import '../models/product.dart';
 
 class NewSaleScreen extends StatefulWidget {
   const NewSaleScreen({super.key});
-
   @override
   State<NewSaleScreen> createState() => _NewSaleScreenState();
 }
 
 class _NewSaleScreenState extends State<NewSaleScreen> {
-  List products = [];
+  List<Product> products = [];
   bool isLoading = true;
   String searchQuery = '';
-
   @override
   void initState() {
     super.initState();
@@ -31,13 +29,9 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
         builder: (_) => const BarcodeScannerScreen(),
       ),
     );
-
     if (barcode == null) return;
-
     final Product? product = await ProductService.getProductByBarcode(barcode);
-
     if (!mounted) return;
-
     if (product == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -46,9 +40,19 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       );
       return;
     }
-
-    CartService.addToCart(product);
-
+    final added = CartService.addToCart(product);
+    if (!added) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            product.quantity <= 0
+                ? "${product.name} is out of stock."
+                : "Not enough ${product.name} in stock.",
+          ),
+        ),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("${product.name} added to cart."),
@@ -58,21 +62,42 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
   Future<void> _loadProducts() async {
     final loadedProducts = await ProductService.getProducts();
-
+    if (!mounted) return;
     setState(() {
       products = loadedProducts;
       isLoading = false;
     });
   }
 
-  List get filteredProducts {
+  List<Product> get filteredProducts {
     if (searchQuery.isEmpty) {
       return products;
     }
-
     return products.where((product) {
       return product.name.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
+  }
+
+  void _addProductToCart(Product product) {
+    final added = CartService.addToCart(product);
+    if (!added) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            product.quantity <= 0
+                ? "${product.name} is out of stock."
+                : "Not enough ${product.name} in stock.",
+          ),
+        ),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("${product.name} added to cart."),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   @override
@@ -133,27 +158,46 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         itemCount: filteredProducts.length,
                         itemBuilder: (context, index) {
                           final product = filteredProducts[index];
-
                           return Card(
                             margin: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 6,
                             ),
                             child: ListTile(
-                              leading: const Icon(Icons.shopping_bag),
+                              leading: CircleAvatar(
+                                child: Icon(
+                                  product.quantity > 0
+                                      ? Icons.shopping_bag
+                                      : Icons.remove_shopping_cart,
+                                ),
+                              ),
                               title: Text(product.name),
                               subtitle: Text(
-                                "R${product.price} | Stock: ${product.quantity}",
+                                "R${product.price.toStringAsFixed(2)}"
+                                " | Stock: ${product.quantity}",
                               ),
                               trailing: IconButton(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.add_circle,
-                                  color: Colors.green,
+                                  color: product.quantity > 0
+                                      ? Colors.green
+                                      : Colors.grey,
                                   size: 30,
                                 ),
-                                onPressed: () {
-                                  CartService.addToCart(product);
-                                },
+                                onPressed: product.quantity > 0
+                                    ? () {
+                                        _addProductToCart(product);
+                                      }
+                                    : () {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "${product.name} is out of stock.",
+                                            ),
+                                          ),
+                                        );
+                                      },
                               ),
                             ),
                           );
@@ -190,7 +234,6 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         0,
                         (sum, item) => sum + item.total,
                       );
-
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -203,7 +246,6 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                     itemCount: cartItems.length,
                                     itemBuilder: (context, index) {
                                       final item = cartItems[index];
-
                                       return ListTile(
                                         title: Text(item.product.name),
                                         subtitle: Text(
@@ -243,14 +285,17 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                             child: ElevatedButton(
                               onPressed: cartItems.isEmpty
                                   ? null
-                                  : () {
-                                      Navigator.push(
+                                  : () async {
+                                      await Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (_) =>
                                               const CheckoutScreen(),
                                         ),
                                       );
+                                      // Reload stock after returning
+                                      // from checkout.
+                                      _loadProducts();
                                     },
                               child: const Text("Checkout"),
                             ),

@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-
 import '../models/customer.dart';
 import '../services/customer_service.dart';
 import 'add_customer.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
-
   @override
   State<CustomersScreen> createState() => _CustomersScreenState();
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
   late Future<List<Customer>> customersFuture;
-
   @override
   void initState() {
     super.initState();
@@ -28,16 +25,27 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   Future<void> deleteCustomer(int id) async {
     await CustomerService.deleteCustomer(id);
-
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Customer deleted successfully"),
       ),
     );
-
     loadCustomers();
+  }
+
+  Future<void> editCustomer(Customer customer) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddCustomerScreen(
+          customer: customer,
+        ),
+      ),
+    );
+    if (result == true) {
+      loadCustomers();
+    }
   }
 
   @override
@@ -55,7 +63,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
               builder: (_) => const AddCustomerScreen(),
             ),
           );
-
           if (result == true) {
             loadCustomers();
           }
@@ -69,15 +76,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
               child: CircularProgressIndicator(),
             );
           }
-
           if (snapshot.hasError) {
             return Center(
               child: Text("Error: ${snapshot.error}"),
             );
           }
-
           final customers = snapshot.data ?? [];
-
           if (customers.isEmpty) {
             return const Center(
               child: Text(
@@ -86,12 +90,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
               ),
             );
           }
-
           return ListView.builder(
             itemCount: customers.length,
             itemBuilder: (context, index) {
               final customer = customers[index];
-
               return Card(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -106,14 +108,30 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     "${customer.phone}\n${customer.email}",
                   ),
                   isThreeLine: true,
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.delete,
-                      color: Colors.red,
-                    ),
-                    onPressed: () {
-                      deleteCustomer(customer.id!);
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit,
+                          color: Colors.blue,
+                        ),
+                        tooltip: "Edit customer",
+                        onPressed: () {
+                          editCustomer(customer);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
+                        tooltip: "Delete customer",
+                        onPressed: () {
+                          deleteCustomer(customer.id!);
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );

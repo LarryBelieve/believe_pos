@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-
 import '../models/supplier.dart';
 import '../services/supplier_service.dart';
 import 'add_supplier_screen.dart';
 
 class SuppliersScreen extends StatefulWidget {
   const SuppliersScreen({super.key});
-
   @override
   State<SuppliersScreen> createState() => _SuppliersScreenState();
 }
 
 class _SuppliersScreenState extends State<SuppliersScreen> {
   late Future<List<Supplier>> suppliersFuture;
-
   @override
   void initState() {
     super.initState();
@@ -28,16 +25,27 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
 
   Future<void> deleteSupplier(int id) async {
     await SupplierService.deleteSupplier(id);
-
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Supplier deleted successfully"),
       ),
     );
-
     loadSuppliers();
+  }
+
+  Future<void> editSupplier(Supplier supplier) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddSupplierScreen(
+          supplier: supplier,
+        ),
+      ),
+    );
+    if (result == true) {
+      loadSuppliers();
+    }
   }
 
   @override
@@ -55,7 +63,6 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
               builder: (_) => const AddSupplierScreen(),
             ),
           );
-
           if (result == true) {
             loadSuppliers();
           }
@@ -69,15 +76,12 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
               child: CircularProgressIndicator(),
             );
           }
-
           if (snapshot.hasError) {
             return Center(
               child: Text(snapshot.error.toString()),
             );
           }
-
           final suppliers = snapshot.data ?? [];
-
           if (suppliers.isEmpty) {
             return const Center(
               child: Text(
@@ -86,12 +90,10 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
               ),
             );
           }
-
           return ListView.builder(
             itemCount: suppliers.length,
             itemBuilder: (context, index) {
               final supplier = suppliers[index];
-
               return Card(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -106,14 +108,30 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                     "${supplier.phone}\n${supplier.email}",
                   ),
                   isThreeLine: true,
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.delete,
-                      color: Colors.red,
-                    ),
-                    onPressed: () {
-                      deleteSupplier(supplier.id!);
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit,
+                          color: Colors.blue,
+                        ),
+                        tooltip: "Edit supplier",
+                        onPressed: () {
+                          editSupplier(supplier);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
+                        tooltip: "Delete supplier",
+                        onPressed: () {
+                          deleteSupplier(supplier.id!);
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );

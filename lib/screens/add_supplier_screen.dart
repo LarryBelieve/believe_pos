@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-
 import '../models/supplier.dart';
 import '../services/supplier_service.dart';
 
 class AddSupplierScreen extends StatefulWidget {
-  const AddSupplierScreen({super.key});
-
+  final Supplier? supplier;
+  const AddSupplierScreen({
+    super.key,
+    this.supplier,
+  });
   @override
   State<AddSupplierScreen> createState() => _AddSupplierScreenState();
 }
@@ -15,6 +17,18 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
+  bool get isEditing => widget.supplier != null;
+  @override
+  void initState() {
+    super.initState();
+    // If editing, load the existing supplier information
+    if (widget.supplier != null) {
+      _nameController.text = widget.supplier!.name;
+      _phoneController.text = widget.supplier!.phone;
+      _emailController.text = widget.supplier!.email;
+      _addressController.text = widget.supplier!.address;
+    }
+  }
 
   @override
   void dispose() {
@@ -26,10 +40,10 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
   }
 
   Future<void> _saveSupplier() async {
-    if (_nameController.text.isEmpty ||
-        _phoneController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _addressController.text.isEmpty) {
+    if (_nameController.text.trim().isEmpty ||
+        _phoneController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _addressController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please fill in all fields"),
@@ -37,24 +51,28 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
       );
       return;
     }
-
     final supplier = Supplier(
+      id: widget.supplier?.id,
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       email: _emailController.text.trim(),
       address: _addressController.text.trim(),
     );
-
-    await SupplierService.addSupplier(supplier);
-
+    if (isEditing) {
+      await SupplierService.updateSupplier(supplier);
+    } else {
+      await SupplierService.addSupplier(supplier);
+    }
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Supplier added successfully!"),
+      SnackBar(
+        content: Text(
+          isEditing
+              ? "Supplier updated successfully!"
+              : "Supplier added successfully!",
+        ),
       ),
     );
-
     Navigator.pop(context, true);
   }
 
@@ -80,7 +98,9 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Supplier"),
+        title: Text(
+          isEditing ? "Edit Supplier" : "Add Supplier",
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -110,9 +130,9 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _saveSupplier,
-                child: const Text(
-                  "Save Supplier",
-                  style: TextStyle(fontSize: 18),
+                child: Text(
+                  isEditing ? "Update Supplier" : "Save Supplier",
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ),

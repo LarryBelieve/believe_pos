@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-
 import '../models/customer.dart';
 import '../services/customer_service.dart';
 
 class AddCustomerScreen extends StatefulWidget {
-  const AddCustomerScreen({super.key});
-
+  final Customer? customer;
+  const AddCustomerScreen({
+    super.key,
+    this.customer,
+  });
   @override
   State<AddCustomerScreen> createState() => _AddCustomerScreenState();
 }
@@ -15,6 +17,18 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
+  bool get isEditing => widget.customer != null;
+  @override
+  void initState() {
+    super.initState();
+    // Load existing customer information when editing.
+    if (widget.customer != null) {
+      _nameController.text = widget.customer!.name;
+      _phoneController.text = widget.customer!.phone;
+      _emailController.text = widget.customer!.email;
+      _addressController.text = widget.customer!.address;
+    }
+  }
 
   @override
   void dispose() {
@@ -26,10 +40,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   }
 
   Future<void> _saveCustomer() async {
-    if (_nameController.text.isEmpty ||
-        _phoneController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _addressController.text.isEmpty) {
+    if (_nameController.text.trim().isEmpty ||
+        _phoneController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _addressController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please fill in all fields"),
@@ -37,24 +51,28 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       );
       return;
     }
-
     final customer = Customer(
+      id: widget.customer?.id,
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       email: _emailController.text.trim(),
       address: _addressController.text.trim(),
     );
-
-    await CustomerService.addCustomer(customer);
-
+    if (isEditing) {
+      await CustomerService.updateCustomer(customer);
+    } else {
+      await CustomerService.addCustomer(customer);
+    }
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Customer added successfully!"),
+      SnackBar(
+        content: Text(
+          isEditing
+              ? "Customer updated successfully!"
+              : "Customer added successfully!",
+        ),
       ),
     );
-
     Navigator.pop(context, true);
   }
 
@@ -80,7 +98,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Customer"),
+        title: Text(
+          isEditing ? "Edit Customer" : "Add Customer",
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -109,9 +129,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: _saveCustomer,
-                child: const Text(
-                  "Save Customer",
-                  style: TextStyle(fontSize: 18),
+                child: Text(
+                  isEditing ? "Update Customer" : "Save Customer",
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ),

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-
 import '../services/dashboard_service.dart';
 import 'new_sale_screen.dart';
 import 'products_screen.dart';
 import 'sales_history_screen.dart';
 import 'customers_screen.dart';
 import 'suppliers_screen.dart';
+import 'receive_stock_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -18,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
   double todaySales = 0;
   int totalTransactions = 0;
   double averageSale = 0;
-
   @override
   void initState() {
     super.initState();
@@ -29,9 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final sales = await DashboardService.getTodaySales();
     final transactions = await DashboardService.getTotalTransactions();
     final average = await DashboardService.getAverageSale();
-
     if (!mounted) return;
-
     setState(() {
       todaySales = sales;
       totalTransactions = transactions;
@@ -131,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Today's sales and transactions
             Row(
               children: [
                 buildInfoCard(
@@ -147,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 12),
+            // Average sale
             Row(
               children: [
                 buildInfoCard(
@@ -165,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 15,
               childAspectRatio: 1.1,
               children: [
+                // New Sale
                 buildCard(
                   context,
                   Icons.point_of_sale,
@@ -176,10 +175,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) => const NewSaleScreen(),
                       ),
                     );
-
                     loadDashboard();
                   },
                 ),
+                // Products
                 buildCard(
                   context,
                   Icons.inventory,
@@ -193,6 +192,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+                // Receive Stock
+                buildCard(
+                  context,
+                  Icons.inventory_2,
+                  "Receive Stock",
+                  () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ReceiveStockScreen(),
+                      ),
+                    );
+                    if (result == true) {
+                      loadDashboard();
+                    }
+                  },
+                ),
+                // Sales History
                 buildCard(
                   context,
                   Icons.receipt_long,
@@ -206,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+                // Customers
                 buildCard(
                   context,
                   Icons.people,
@@ -219,6 +237,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+                // Suppliers
+                buildCard(
+                  context,
+                  Icons.business,
+                  "Suppliers",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SuppliersScreen(),
+                      ),
+                    );
+                  },
+                ),
+                // Settings
                 buildCard(
                   context,
                   Icons.settings,
@@ -226,11 +259,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Settings module coming soon"),
+                        content: Text(
+                          "Settings module coming soon",
+                        ),
                       ),
                     );
                   },
                 ),
+                // Reports
                 buildCard(
                   context,
                   Icons.bar_chart,
@@ -241,19 +277,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         content: Text(
                           "Reports module coming soon",
                         ),
-                      ),
-                    );
-                  },
-                ),
-                buildCard(
-                  context,
-                  Icons.business,
-                  "Suppliers",
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SuppliersScreen(),
                       ),
                     );
                   },
