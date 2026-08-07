@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+
 import '../services/dashboard_service.dart';
+import '../services/product_service.dart';
+
 import 'new_sale_screen.dart';
 import 'products_screen.dart';
 import 'sales_history_screen.dart';
 import 'customers_screen.dart';
 import 'suppliers_screen.dart';
 import 'receive_stock_screen.dart';
+import 'stock_receipts_screen.dart';
+import 'low_stock_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -17,6 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   double todaySales = 0;
   int totalTransactions = 0;
   double averageSale = 0;
+  int lowStockCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -24,15 +32,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadDashboard() async {
-    final sales = await DashboardService.getTodaySales();
-    final transactions = await DashboardService.getTotalTransactions();
-    final average = await DashboardService.getAverageSale();
-    if (!mounted) return;
-    setState(() {
-      todaySales = sales;
-      totalTransactions = transactions;
-      averageSale = average;
-    });
+    try {
+      final sales = await DashboardService.getTodaySales();
+      final transactions = await DashboardService.getTotalTransactions();
+      final average = await DashboardService.getAverageSale();
+
+      final lowStockProducts = await ProductService.getLowStockProducts();
+
+      if (!mounted) return;
+
+      setState(() {
+        todaySales = sales;
+        totalTransactions = transactions;
+        averageSale = average;
+        lowStockCount = lowStockProducts.length;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error loading dashboard: $e",
+          ),
+        ),
+      );
+    }
   }
 
   Widget buildCard(
@@ -78,41 +103,57 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildInfoCard(
     String title,
     String value,
-    Color color,
-  ) {
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Expanded(
       child: Card(
         elevation: 6,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 22,
-          ),
-          child: Column(
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 22,
+            ),
+            child: Column(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+                const SizedBox(height: 10),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> openLowStock() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LowStockScreen(),
+      ),
+    );
+
+    await loadDashboard();
   }
 
   @override
@@ -127,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Today's sales and transactions
+            // Today's Sales + Transactions
             Row(
               children: [
                 buildInfoCard(
@@ -143,8 +184,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
-            // Average sale
+
+            // Average Sale + Low Stock
             Row(
               children: [
                 buildInfoCard(
@@ -152,9 +195,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   "R${averageSale.toStringAsFixed(2)}",
                   Colors.orange,
                 ),
+                const SizedBox(width: 12),
+                buildInfoCard(
+                  "Low Stock",
+                  lowStockCount.toString(),
+                  Colors.red,
+                  onTap: openLowStock,
+                ),
               ],
             ),
+
             const SizedBox(height: 20),
+
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -175,40 +227,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) => const NewSaleScreen(),
                       ),
                     );
-                    loadDashboard();
+
+                    await loadDashboard();
                   },
                 ),
+
                 // Products
                 buildCard(
                   context,
                   Icons.inventory,
                   "Products",
-                  () {
-                    Navigator.push(
+                  () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const ProductsScreen(),
                       ),
                     );
+
+                    await loadDashboard();
                   },
                 ),
-                // Receive Stock
-                buildCard(
-                  context,
-                  Icons.inventory_2,
-                  "Receive Stock",
-                  () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ReceiveStockScreen(),
-                      ),
-                    );
-                    if (result == true) {
-                      loadDashboard();
-                    }
-                  },
-                ),
+
                 // Sales History
                 buildCard(
                   context,
@@ -223,6 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+
                 // Customers
                 buildCard(
                   context,
@@ -237,20 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                // Suppliers
-                buildCard(
-                  context,
-                  Icons.business,
-                  "Suppliers",
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SuppliersScreen(),
-                      ),
-                    );
-                  },
-                ),
+
                 // Settings
                 buildCard(
                   context,
@@ -266,6 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+
                 // Reports
                 buildCard(
                   context,
@@ -277,6 +306,53 @@ class _HomeScreenState extends State<HomeScreen> {
                         content: Text(
                           "Reports module coming soon",
                         ),
+                      ),
+                    );
+                  },
+                ),
+
+                // Suppliers
+                buildCard(
+                  context,
+                  Icons.business,
+                  "Suppliers",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SuppliersScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                // Receive Stock
+                buildCard(
+                  context,
+                  Icons.inventory_2,
+                  "Receive Stock",
+                  () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ReceiveStockScreen(),
+                      ),
+                    );
+
+                    await loadDashboard();
+                  },
+                ),
+
+                // Stock History
+                buildCard(
+                  context,
+                  Icons.history,
+                  "Stock History",
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const StockReceiptsScreen(),
                       ),
                     );
                   },

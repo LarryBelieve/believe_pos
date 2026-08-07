@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../models/supplier.dart';
-import '../models/stock_receipt.dart';
+import '../models/stock_movement.dart';
 import '../services/product_service.dart';
 import '../services/supplier_service.dart';
-import '../services/stock_receipt_service.dart';
+import '../services/stock_movement_service.dart';
 
 class StockReceiptsScreen extends StatefulWidget {
   const StockReceiptsScreen({super.key});
@@ -15,7 +15,7 @@ class StockReceiptsScreen extends StatefulWidget {
 }
 
 class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
-  List<StockReceipt> receipts = [];
+  List<StockMovement> movements = [];
   List<Product> products = [];
   List<Supplier> suppliers = [];
 
@@ -29,7 +29,7 @@ class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
 
   Future<void> _loadData() async {
     try {
-      final loadedReceipts = await StockReceiptService.getStockReceipts();
+      final loadedMovements = await StockMovementService.getMovements();
 
       final loadedProducts = await ProductService.getProducts();
 
@@ -38,7 +38,7 @@ class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
       if (!mounted) return;
 
       setState(() {
-        receipts = loadedReceipts;
+        movements = loadedMovements;
         products = loadedProducts;
         suppliers = loadedSuppliers;
         isLoading = false;
@@ -72,31 +72,18 @@ class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
     }
   }
 
-  String getSupplierName(int? supplierId) {
-    if (supplierId == null) {
-      return "No Supplier";
-    }
-
-    try {
-      final supplier = suppliers.firstWhere(
-        (supplier) => supplier.id == supplierId,
-      );
-
-      return supplier.name;
-    } catch (_) {
-      return "Unknown Supplier";
-    }
-  }
-
   String formatDate(String date) {
     try {
       final parsedDate = DateTime.parse(date);
 
       final day = parsedDate.day.toString().padLeft(2, '0');
+
       final month = parsedDate.month.toString().padLeft(2, '0');
+
       final year = parsedDate.year.toString();
 
       final hour = parsedDate.hour.toString().padLeft(2, '0');
+
       final minute = parsedDate.minute.toString().padLeft(2, '0');
 
       return "$day/$month/$year $hour:$minute";
@@ -105,11 +92,151 @@ class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
     }
   }
 
+  IconData getMovementIcon(String type) {
+    switch (type.toUpperCase()) {
+      case 'RECEIVED':
+        return Icons.add_circle;
+
+      case 'SALE':
+        return Icons.remove_circle;
+
+      case 'ADJUSTMENT':
+        return Icons.edit;
+
+      default:
+        return Icons.inventory;
+    }
+  }
+
+  Color getMovementColor(String type) {
+    switch (type.toUpperCase()) {
+      case 'RECEIVED':
+        return Colors.green;
+
+      case 'SALE':
+        return Colors.red;
+
+      case 'ADJUSTMENT':
+        return Colors.orange;
+
+      default:
+        return Colors.blue;
+    }
+  }
+
+  String getMovementTitle(String type) {
+    switch (type.toUpperCase()) {
+      case 'RECEIVED':
+        return "Stock Received";
+
+      case 'SALE':
+        return "Stock Sold";
+
+      case 'ADJUSTMENT':
+        return "Stock Adjustment";
+
+      default:
+        return type;
+    }
+  }
+
+  Widget buildMovementCard(
+    StockMovement movement,
+  ) {
+    final productName = getProductName(movement.productId);
+
+    final color = getMovementColor(movement.movementType);
+
+    final icon = getMovementIcon(movement.movementType);
+
+    final title = getMovementTitle(movement.movementType);
+
+    final isIncrease = movement.quantity > 0;
+
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.only(
+        bottom: 12,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.12),
+              child: Icon(
+                icon,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    productName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    formatDate(
+                      movement.movementDate,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  if (movement.note != null &&
+                      movement.note!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 5),
+                    Text(
+                      movement.note!,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              "${isIncrease ? '+' : ''}${movement.quantity}",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Stock Receiving History"),
+        title: const Text(
+          "Stock History",
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -122,29 +249,36 @@ class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : receipts.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+          : movements.isEmpty
+              ? RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 180),
                       Icon(
-                        Icons.inventory_2_outlined,
+                        Icons.history,
                         size: 70,
                         color: Colors.grey,
                       ),
                       SizedBox(height: 15),
-                      Text(
-                        "No stock receipts yet.",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Center(
+                        child: Text(
+                          "No stock movements yet.",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       SizedBox(height: 8),
-                      Text(
-                        "Received stock will appear here.",
-                        style: TextStyle(
-                          color: Colors.grey,
+                      Center(
+                        child: Text(
+                          "Stock received and sales will appear here.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ],
@@ -154,154 +288,10 @@ class _StockReceiptsScreenState extends State<StockReceiptsScreen> {
                   onRefresh: _loadData,
                   child: ListView.builder(
                     padding: const EdgeInsets.all(12),
-                    itemCount: receipts.length,
+                    itemCount: movements.length,
                     itemBuilder: (context, index) {
-                      final receipt = receipts[index];
-
-                      final productName = getProductName(receipt.productId);
-
-                      final supplierName = getSupplierName(receipt.supplierId);
-
-                      return Card(
-                        elevation: 3,
-                        margin: const EdgeInsets.only(
-                          bottom: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const CircleAvatar(
-                                    child: Icon(
-                                      Icons.inventory_2,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      productName,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Divider(height: 25),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.business,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    "Supplier:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: Text(
-                                      supplierName,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.numbers,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    "Quantity:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    receipt.quantity.toString(),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.payments,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    "Cost Price:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    "R${receipt.costPrice.toStringAsFixed(2)}",
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    "Date:",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: Text(
-                                      formatDate(
-                                        receipt.receiptDate,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 15),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.green.withOpacity(0.1),
-                                ),
-                                child: Text(
-                                  "Stock Added: +${receipt.quantity}",
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      return buildMovementCard(
+                        movements[index],
                       );
                     },
                   ),

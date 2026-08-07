@@ -21,14 +21,16 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _createDB(Database db, int version) async {
-    // Products Table
+    // =========================
+    // PRODUCTS
+    // =========================
     await db.execute('''
       CREATE TABLE products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +44,9 @@ class DatabaseHelper {
       )
     ''');
 
-    // Sales Table
+    // =========================
+    // SALES
+    // =========================
     await db.execute('''
       CREATE TABLE sales (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +56,9 @@ class DatabaseHelper {
       )
     ''');
 
-    // Sale Items Table
+    // =========================
+    // SALE ITEMS
+    // =========================
     await db.execute('''
       CREATE TABLE sale_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,7 +72,9 @@ class DatabaseHelper {
       )
     ''');
 
-    // Customers Table
+    // =========================
+    // CUSTOMERS
+    // =========================
     await db.execute('''
       CREATE TABLE customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +85,9 @@ class DatabaseHelper {
       )
     ''');
 
-    // Suppliers Table
+    // =========================
+    // SUPPLIERS
+    // =========================
     await db.execute('''
       CREATE TABLE suppliers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,7 +98,9 @@ class DatabaseHelper {
       )
     ''');
 
-    // Stock Receipts Table
+    // =========================
+    // STOCK RECEIPTS
+    // =========================
     await db.execute('''
       CREATE TABLE stock_receipts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,6 +113,22 @@ class DatabaseHelper {
         FOREIGN KEY (supplierId) REFERENCES suppliers(id)
       )
     ''');
+
+    // =========================
+    // STOCK MOVEMENTS
+    // =========================
+    await db.execute('''
+      CREATE TABLE stock_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        productId INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        movementType TEXT NOT NULL,
+        referenceId INTEGER,
+        note TEXT,
+        movementDate TEXT NOT NULL,
+        FOREIGN KEY (productId) REFERENCES products(id)
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(
@@ -108,14 +136,18 @@ class DatabaseHelper {
     int oldVersion,
     int newVersion,
   ) async {
-    // Version 2
+    // =========================
+    // VERSION 2
+    // =========================
     if (oldVersion < 2) {
       await db.execute(
         "ALTER TABLE products ADD COLUMN barcode TEXT NOT NULL DEFAULT '';",
       );
     }
 
-    // Version 3
+    // =========================
+    // VERSION 3
+    // =========================
     if (oldVersion < 3) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS customers (
@@ -128,7 +160,9 @@ class DatabaseHelper {
       ''');
     }
 
-    // Version 4
+    // =========================
+    // VERSION 4
+    // =========================
     if (oldVersion < 4) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS suppliers (
@@ -141,7 +175,9 @@ class DatabaseHelper {
       ''');
     }
 
-    // Version 5
+    // =========================
+    // VERSION 5
+    // =========================
     if (oldVersion < 5) {
       await db.execute(
         "ALTER TABLE products ADD COLUMN supplierId INTEGER;",
@@ -152,7 +188,9 @@ class DatabaseHelper {
       );
     }
 
-    // Version 6
+    // =========================
+    // VERSION 6
+    // =========================
     if (oldVersion < 6) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS stock_receipts (
@@ -168,9 +206,9 @@ class DatabaseHelper {
       ''');
     }
 
-    // Version 7
-    // Safety migration in case the database was already
-    // upgraded to version 6 before stock_receipts existed.
+    // =========================
+    // VERSION 7
+    // =========================
     if (oldVersion < 7) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS stock_receipts (
@@ -185,10 +223,31 @@ class DatabaseHelper {
         )
       ''');
     }
+
+    // =========================
+    // VERSION 8
+    // STOCK MOVEMENTS
+    // =========================
+    if (oldVersion < 8) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS stock_movements (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          productId INTEGER NOT NULL,
+          quantity INTEGER NOT NULL,
+          movementType TEXT NOT NULL,
+          referenceId INTEGER,
+          note TEXT,
+          movementDate TEXT NOT NULL,
+          FOREIGN KEY (productId) REFERENCES products(id)
+        )
+      ''');
+    }
   }
 
   Future<void> close() async {
     final db = await instance.database;
     await db.close();
+
+    _database = null;
   }
 }

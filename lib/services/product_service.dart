@@ -2,6 +2,7 @@ import '../database/database_helper.dart';
 import '../models/product.dart';
 
 class ProductService {
+  // Add Product
   static Future<int> addProduct(Product product) async {
     final db = await DatabaseHelper.instance.database;
 
@@ -11,15 +12,22 @@ class ProductService {
     );
   }
 
+  // Get All Products
   static Future<List<Product>> getProducts() async {
     final db = await DatabaseHelper.instance.database;
 
-    final result = await db.query('products');
+    final result = await db.query(
+      'products',
+      orderBy: 'name ASC',
+    );
 
     return result.map((e) => Product.fromMap(e)).toList();
   }
 
-  static Future<Product?> getProductByBarcode(String barcode) async {
+  // Get Product By Barcode
+  static Future<Product?> getProductByBarcode(
+    String barcode,
+  ) async {
     final db = await DatabaseHelper.instance.database;
 
     final result = await db.query(
@@ -36,6 +44,26 @@ class ProductService {
     return Product.fromMap(result.first);
   }
 
+  // Get Low Stock Products
+  //
+  // Products with quantity less than or equal to
+  // the threshold are considered low stock.
+  static Future<List<Product>> getLowStockProducts({
+    int threshold = 5,
+  }) async {
+    final db = await DatabaseHelper.instance.database;
+
+    final result = await db.query(
+      'products',
+      where: 'quantity <= ?',
+      whereArgs: [threshold],
+      orderBy: 'quantity ASC',
+    );
+
+    return result.map((e) => Product.fromMap(e)).toList();
+  }
+
+  // Delete Product
   static Future<int> deleteProduct(int id) async {
     final db = await DatabaseHelper.instance.database;
 
@@ -46,6 +74,7 @@ class ProductService {
     );
   }
 
+  // Update Product
   static Future<int> updateProduct(Product product) async {
     final db = await DatabaseHelper.instance.database;
 
