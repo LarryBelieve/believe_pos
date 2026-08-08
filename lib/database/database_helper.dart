@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -126,6 +126,8 @@ class DatabaseHelper {
         referenceId INTEGER,
         note TEXT,
         movementDate TEXT NOT NULL,
+        stockBefore INTEGER NOT NULL DEFAULT 0,
+        stockAfter INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (productId) REFERENCES products(id)
       )
     ''');
@@ -138,15 +140,18 @@ class DatabaseHelper {
   ) async {
     // =========================
     // VERSION 2
+    // BARCODE
     // =========================
     if (oldVersion < 2) {
-      await db.execute(
-        "ALTER TABLE products ADD COLUMN barcode TEXT NOT NULL DEFAULT '';",
-      );
+      await db.execute('''
+        ALTER TABLE products
+        ADD COLUMN barcode TEXT NOT NULL DEFAULT ''
+      ''');
     }
 
     // =========================
     // VERSION 3
+    // CUSTOMERS
     // =========================
     if (oldVersion < 3) {
       await db.execute('''
@@ -162,6 +167,7 @@ class DatabaseHelper {
 
     // =========================
     // VERSION 4
+    // SUPPLIERS
     // =========================
     if (oldVersion < 4) {
       await db.execute('''
@@ -177,19 +183,23 @@ class DatabaseHelper {
 
     // =========================
     // VERSION 5
+    // SUPPLIER + COST PRICE
     // =========================
     if (oldVersion < 5) {
-      await db.execute(
-        "ALTER TABLE products ADD COLUMN supplierId INTEGER;",
-      );
+      await db.execute('''
+        ALTER TABLE products
+        ADD COLUMN supplierId INTEGER
+      ''');
 
-      await db.execute(
-        "ALTER TABLE products ADD COLUMN costPrice REAL NOT NULL DEFAULT 0;",
-      );
+      await db.execute('''
+        ALTER TABLE products
+        ADD COLUMN costPrice REAL NOT NULL DEFAULT 0
+      ''');
     }
 
     // =========================
     // VERSION 6
+    // STOCK RECEIPTS
     // =========================
     if (oldVersion < 6) {
       await db.execute('''
@@ -208,6 +218,7 @@ class DatabaseHelper {
 
     // =========================
     // VERSION 7
+    // STOCK RECEIPTS SAFETY CHECK
     // =========================
     if (oldVersion < 7) {
       await db.execute('''
@@ -242,10 +253,27 @@ class DatabaseHelper {
         )
       ''');
     }
+
+    // =========================
+    // VERSION 9
+    // STOCK BEFORE / STOCK AFTER
+    // =========================
+    if (oldVersion < 9) {
+      await db.execute('''
+        ALTER TABLE stock_movements
+        ADD COLUMN stockBefore INTEGER NOT NULL DEFAULT 0
+      ''');
+
+      await db.execute('''
+        ALTER TABLE stock_movements
+        ADD COLUMN stockAfter INTEGER NOT NULL DEFAULT 0
+      ''');
+    }
   }
 
   Future<void> close() async {
     final db = await instance.database;
+
     await db.close();
 
     _database = null;

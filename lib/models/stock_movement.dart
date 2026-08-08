@@ -6,6 +6,8 @@ class StockMovement {
   final int? referenceId;
   final String? note;
   final String movementDate;
+  final int stockBefore;
+  final int stockAfter;
 
   StockMovement({
     this.id,
@@ -15,6 +17,8 @@ class StockMovement {
     this.referenceId,
     this.note,
     required this.movementDate,
+    required this.stockBefore,
+    required this.stockAfter,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,12 +30,12 @@ class StockMovement {
       'referenceId': referenceId,
       'note': note,
       'movementDate': movementDate,
+      'stockBefore': stockBefore,
+      'stockAfter': stockAfter,
     };
   }
 
-  factory StockMovement.fromMap(
-    Map<String, dynamic> map,
-  ) {
+  factory StockMovement.fromMap(Map<String, dynamic> map) {
     return StockMovement(
       id: map['id'],
       productId: map['productId'],
@@ -40,6 +44,8 @@ class StockMovement {
       referenceId: map['referenceId'],
       note: map['note'],
       movementDate: map['movementDate'],
+      stockBefore: map['stockBefore'] ?? 0,
+      stockAfter: map['stockAfter'] ?? 0,
     );
   }
 }

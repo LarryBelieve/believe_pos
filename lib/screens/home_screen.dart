@@ -9,7 +9,7 @@ import 'sales_history_screen.dart';
 import 'customers_screen.dart';
 import 'suppliers_screen.dart';
 import 'receive_stock_screen.dart';
-import 'stock_receipts_screen.dart';
+import 'stock_movement_screen.dart';
 import 'low_stock_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -347,12 +347,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 buildCard(
                   context,
                   Icons.history,
-                  "Stock History",
+                  "Stock Movement History",
                   () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const StockReceiptsScreen(),
+                        builder: (_) => const StockMovementScreen(),
                       ),
                     );
                   },

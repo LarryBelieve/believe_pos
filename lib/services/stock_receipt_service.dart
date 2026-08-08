@@ -9,28 +9,49 @@ class StockReceiptService {
     final db = await DatabaseHelper.instance.database;
 
     return await db.transaction((txn) async {
-      // 1. Record the stock receipt.
+      // Make sure the product exists.
+      final productResult = await txn.query(
+        'products',
+        columns: ['quantity'],
+        where: 'id = ?',
+        whereArgs: [receipt.productId],
+        limit: 1,
+      );
+
+      if (productResult.isEmpty) {
+        throw Exception(
+          'Product with ID ${receipt.productId} was not found.',
+        );
+      }
+
+      // Stock before receiving.
+      final int stockBefore = (productResult.first['quantity'] as num).toInt();
+
+      // Stock after receiving.
+      final int stockAfter = stockBefore + receipt.quantity;
+
+      // Record the stock receipt.
       final receiptId = await txn.insert(
         'stock_receipts',
         receipt.toMap(),
       );
 
-      // 2. Increase the product stock.
+      // Update product stock.
       await txn.rawUpdate(
         '''
         UPDATE products
-        SET quantity = quantity + ?,
+        SET quantity = ?,
             costPrice = ?
         WHERE id = ?
         ''',
         [
-          receipt.quantity,
+          stockAfter,
           receipt.costPrice,
           receipt.productId,
         ],
       );
 
-      // 3. Record the stock movement.
+      // Record stock movement with before/after values.
       await txn.insert(
         'stock_movements',
         StockMovement(
@@ -40,10 +61,11 @@ class StockReceiptService {
           referenceId: receiptId,
           note: 'Stock received',
           movementDate: receipt.receiptDate,
+          stockBefore: stockBefore,
+          stockAfter: stockAfter,
         ).toMap(),
       );
 
-      // 4. Return the receipt ID.
       return receiptId;
     });
   }
