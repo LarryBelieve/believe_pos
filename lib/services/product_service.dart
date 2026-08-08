@@ -2,7 +2,9 @@ import '../database/database_helper.dart';
 import '../models/product.dart';
 
 class ProductService {
-  // Add Product
+  // =========================
+  // ADD PRODUCT
+  // =========================
   static Future<int> addProduct(Product product) async {
     final db = await DatabaseHelper.instance.database;
 
@@ -12,7 +14,9 @@ class ProductService {
     );
   }
 
-  // Get All Products
+  // =========================
+  // GET ALL PRODUCTS
+  // =========================
   static Future<List<Product>> getProducts() async {
     final db = await DatabaseHelper.instance.database;
 
@@ -24,7 +28,9 @@ class ProductService {
     return result.map((e) => Product.fromMap(e)).toList();
   }
 
-  // Get Product By Barcode
+  // =========================
+  // GET PRODUCT BY BARCODE
+  // =========================
   static Future<Product?> getProductByBarcode(
     String barcode,
   ) async {
@@ -44,10 +50,9 @@ class ProductService {
     return Product.fromMap(result.first);
   }
 
-  // Get Low Stock Products
-  //
-  // Products with quantity less than or equal to
-  // the threshold are considered low stock.
+  // =========================
+  // GET LOW STOCK PRODUCTS
+  // =========================
   static Future<List<Product>> getLowStockProducts({
     int threshold = 5,
   }) async {
@@ -63,7 +68,9 @@ class ProductService {
     return result.map((e) => Product.fromMap(e)).toList();
   }
 
-  // Delete Product
+  // =========================
+  // DELETE PRODUCT
+  // =========================
   static Future<int> deleteProduct(int id) async {
     final db = await DatabaseHelper.instance.database;
 
@@ -74,7 +81,9 @@ class ProductService {
     );
   }
 
-  // Update Product
+  // =========================
+  // UPDATE PRODUCT
+  // =========================
   static Future<int> updateProduct(Product product) async {
     final db = await DatabaseHelper.instance.database;
 

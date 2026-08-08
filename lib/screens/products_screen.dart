@@ -5,6 +5,7 @@ import '../models/supplier.dart';
 import '../services/product_service.dart';
 import '../services/supplier_service.dart';
 
+import 'product_inventory_details_screen.dart';
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
 
@@ -28,6 +29,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
     super.initState();
     loadProducts();
   }
+
+  // =========================
+  // LOAD PRODUCTS
+  // =========================
 
   Future<void> loadProducts() async {
     try {
@@ -59,6 +64,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  // =========================
+  // GET SUPPLIER NAME
+  // =========================
+
   String getSupplierName(int? supplierId) {
     if (supplierId == null) {
       return "No supplier";
@@ -74,6 +83,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
       return "No supplier";
     }
   }
+
+  // =========================
+  // DELETE PRODUCT
+  // =========================
 
   Future<void> deleteProduct(int id) async {
     try {
@@ -103,6 +116,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  // =========================
+  // EDIT PRODUCT
+  // =========================
+
   Future<void> editProduct(Product product) async {
     final result = await Navigator.push(
       context,
@@ -118,6 +135,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  // =========================
+  // ADD PRODUCT
+  // =========================
+
   Future<void> addProduct() async {
     await Navigator.push(
       context,
@@ -129,6 +150,28 @@ class _ProductsScreenState extends State<ProductsScreen> {
     await loadProducts();
   }
 
+  // =========================
+  // OPEN INVENTORY DETAILS
+  // =========================
+
+  Future<void> openInventoryDetails(Product product) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductInventoryDetailsScreen(
+          product: product,
+        ),
+      ),
+    );
+
+    // Refresh the product list when returning.
+    await loadProducts();
+  }
+
+  // =========================
+  // CONFIRM DELETE
+  // =========================
+
   Future<void> confirmDelete(Product product) async {
     if (product.id == null) return;
 
@@ -136,7 +179,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Delete Product"),
+          title: const Text(
+            "Delete Product",
+          ),
           content: Text(
             "Are you sure you want to delete ${product.name}?",
           ),
@@ -145,7 +190,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text("Cancel"),
+              child: const Text(
+                "Cancel",
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -155,7 +202,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
               ),
-              child: const Text("Delete"),
+              child: const Text(
+                "Delete",
+              ),
             ),
           ],
         );
@@ -167,300 +216,374 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  // =========================
+  // PRODUCT CARD
+  // =========================
+
   Widget buildProductCard(Product product) {
-    final supplierName = getSupplierName(product.supplierId);
+    final supplierName = getSupplierName(
+      product.supplierId,
+    );
 
     final double profit = product.price - product.costPrice;
 
     final bool isLowStock = product.quantity <= lowStockLimit;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(
+        bottom: 12,
+      ),
       elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product name and stock status
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  child: const Icon(
-                    Icons.inventory_2,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          openInventoryDetails(product);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // =========================
+              // PRODUCT NAME + STOCK STATUS
+              // =========================
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    child: Icon(
+                      Icons.inventory_2,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 18,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          product.category,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isLowStock)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        "LOW STOCK",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        product.category,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isLowStock)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      "LOW STOCK",
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                ],
+              ),
 
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-            const Divider(),
+              const Divider(),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            // Stock
-            Row(
-              children: [
-                const Icon(
-                  Icons.inventory,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  "Stock:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  product.quantity.toString(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isLowStock ? Colors.red : Colors.green,
-                  ),
-                ),
-              ],
-            ),
+              // =========================
+              // STOCK
+              // =========================
 
-            const SizedBox(height: 8),
-
-            // Supplier
-            Row(
-              children: [
-                const Icon(
-                  Icons.business,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  "Supplier:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.inventory,
+                    size: 20,
                   ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    supplierName,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            // Barcode
-            Row(
-              children: [
-                const Icon(
-                  Icons.qr_code,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  "Barcode:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    product.barcode,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Prices
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey.shade100,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Cost Price",
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          "R${product.costPrice.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey.shade100,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Selling Price",
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          "R${product.price.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: profit >= 0
-                          ? Colors.green.shade50
-                          : Colors.red.shade50,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Profit / Unit",
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          "R${profit.toStringAsFixed(2)}",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: profit >= 0 ? Colors.green : Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () {
-                    editProduct(product);
-                  },
-                  icon: const Icon(
-                    Icons.edit,
-                  ),
-                  label: const Text("Edit"),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    confirmDelete(product);
-                  },
-                  icon: const Icon(
-                    Icons.delete,
-                    color: Colors.red,
-                  ),
-                  label: const Text(
-                    "Delete",
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Stock:",
                     style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    product.quantity.toString(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isLowStock ? Colors.red : Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // =========================
+              // SUPPLIER
+              // =========================
+
+              Row(
+                children: [
+                  const Icon(
+                    Icons.business,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Supplier:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      supplierName,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // =========================
+              // BARCODE
+              // =========================
+
+              Row(
+                children: [
+                  const Icon(
+                    Icons.qr_code,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Barcode:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      product.barcode,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // =========================
+              // PRICES
+              // =========================
+
+              Row(
+                children: [
+                  // Cost Price
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey.shade100,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Cost Price",
+                            style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "R${product.costPrice.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Selling Price
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey.shade100,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Selling Price",
+                            style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "R${product.price.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Profit
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: profit >= 0
+                            ? Colors.green.shade50
+                            : Colors.red.shade50,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Profit / Unit",
+                            style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "R${profit.toStringAsFixed(2)}",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: profit >= 0 ? Colors.green : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // =========================
+              // BUTTONS
+              // =========================
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      editProduct(product);
+                    },
+                    icon: const Icon(
+                      Icons.edit,
+                    ),
+                    label: const Text(
+                      "Edit",
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      confirmDelete(product);
+                    },
+                    icon: const Icon(
+                      Icons.delete,
                       color: Colors.red,
                     ),
+                    label: const Text(
+                      "Delete",
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+
+              const SizedBox(height: 4),
+
+              // =========================
+              // TAP HINT
+              // =========================
+
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.touch_app,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(width: 5),
+                  Text(
+                    "Tap product to view inventory details",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // =========================
+  // BUILD SCREEN
+  // =========================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Products"),
+        title: const Text(
+          "Products",
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: addProduct,
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+        ),
       ),
       body: isLoading
           ? const Center(
@@ -470,6 +593,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               ? RefreshIndicator(
                   onRefresh: loadProducts,
                   child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     children: const [
                       SizedBox(height: 250),
                       Center(
