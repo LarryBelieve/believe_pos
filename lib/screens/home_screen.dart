@@ -25,6 +25,12 @@ class _HomeScreenState extends State<HomeScreen> {
   double averageSale = 0;
   int lowStockCount = 0;
 
+  double todayProfit = 0;
+  int totalProducts = 0;
+  double totalStockValue = 0;
+
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final transactions = await DashboardService.getTotalTransactions();
       final average = await DashboardService.getAverageSale();
 
+      final profit = await DashboardService.getTodayProfit();
+
+      final products = await DashboardService.getTotalProducts();
+
+      final stockValue = await DashboardService.getTotalStockValue();
+
       final lowStockProducts = await ProductService.getLowStockProducts();
 
       if (!mounted) return;
@@ -45,10 +57,18 @@ class _HomeScreenState extends State<HomeScreen> {
         todaySales = sales;
         totalTransactions = transactions;
         averageSale = average;
+        todayProfit = profit;
+        totalProducts = products;
+        totalStockValue = stockValue;
         lowStockCount = lowStockProducts.length;
+        isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -117,22 +137,24 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 22,
+              horizontal: 12,
+              vertical: 20,
             ),
             child: Column(
               children: [
                 Text(
                   title,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   value,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 23,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
@@ -165,202 +187,299 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: loadDashboard,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Today's Sales + Transactions
-            Row(
-              children: [
-                buildInfoCard(
-                  "Today's Sales",
-                  "R${todaySales.toStringAsFixed(2)}",
-                  Colors.green,
-                ),
-                const SizedBox(width: 12),
-                buildInfoCard(
-                  "Transactions",
-                  totalTransactions.toString(),
-                  Colors.blue,
-                ),
-              ],
-            ),
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // =========================
+                  // SALES SUMMARY
+                  // =========================
 
-            const SizedBox(height: 12),
+                  const Text(
+                    "Today's Overview",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
 
-            // Average Sale + Low Stock
-            Row(
-              children: [
-                buildInfoCard(
-                  "Average Sale",
-                  "R${averageSale.toStringAsFixed(2)}",
-                  Colors.orange,
-                ),
-                const SizedBox(width: 12),
-                buildInfoCard(
-                  "Low Stock",
-                  lowStockCount.toString(),
-                  Colors.red,
-                  onTap: openLowStock,
-                ),
-              ],
-            ),
+                  const SizedBox(height: 12),
 
-            const SizedBox(height: 20),
-
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              childAspectRatio: 1.1,
-              children: [
-                // New Sale
-                buildCard(
-                  context,
-                  Icons.point_of_sale,
-                  "New Sale",
-                  () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NewSaleScreen(),
+                  Row(
+                    children: [
+                      buildInfoCard(
+                        "Today's Sales",
+                        "R${todaySales.toStringAsFixed(2)}",
+                        Colors.green,
                       ),
-                    );
-
-                    await loadDashboard();
-                  },
-                ),
-
-                // Products
-                buildCard(
-                  context,
-                  Icons.inventory,
-                  "Products",
-                  () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ProductsScreen(),
+                      const SizedBox(width: 12),
+                      buildInfoCard(
+                        "Transactions",
+                        totalTransactions.toString(),
+                        Colors.blue,
                       ),
-                    );
+                    ],
+                  ),
 
-                    await loadDashboard();
-                  },
-                ),
+                  const SizedBox(height: 12),
 
-                // Sales History
-                buildCard(
-                  context,
-                  Icons.receipt_long,
-                  "Sales History",
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SalesHistoryScreen(),
+                  Row(
+                    children: [
+                      buildInfoCard(
+                        "Average Sale",
+                        "R${averageSale.toStringAsFixed(2)}",
+                        Colors.orange,
                       ),
-                    );
-                  },
-                ),
-
-                // Customers
-                buildCard(
-                  context,
-                  Icons.people,
-                  "Customers",
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CustomersScreen(),
+                      const SizedBox(width: 12),
+                      buildInfoCard(
+                        "Today's Profit",
+                        "R${todayProfit.toStringAsFixed(2)}",
+                        todayProfit >= 0 ? Colors.green : Colors.red,
                       ),
-                    );
-                  },
-                ),
+                    ],
+                  ),
 
-                // Settings
-                buildCard(
-                  context,
-                  Icons.settings,
-                  "Settings",
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Settings module coming soon",
-                        ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      buildInfoCard(
+                        "Low Stock",
+                        lowStockCount.toString(),
+                        Colors.red,
+                        onTap: openLowStock,
                       ),
-                    );
-                  },
-                ),
-
-                // Reports
-                buildCard(
-                  context,
-                  Icons.bar_chart,
-                  "Reports",
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Reports module coming soon",
-                        ),
+                      const SizedBox(width: 12),
+                      buildInfoCard(
+                        "Total Products",
+                        totalProducts.toString(),
+                        Colors.purple,
                       ),
-                    );
-                  },
-                ),
+                    ],
+                  ),
 
-                // Suppliers
-                buildCard(
-                  context,
-                  Icons.business,
-                  "Suppliers",
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SuppliersScreen(),
+                  const SizedBox(height: 12),
+
+                  // =========================
+                  // STOCK VALUE
+                  // =========================
+
+                  Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.account_balance_wallet,
+                            size: 45,
+                            color: Colors.indigo,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            "Total Stock Value",
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "R${totalStockValue.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
 
-                // Receive Stock
-                buildCard(
-                  context,
-                  Icons.inventory_2,
-                  "Receive Stock",
-                  () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ReceiveStockScreen(),
+                  const SizedBox(height: 24),
+
+                  // =========================
+                  // QUICK ACTIONS
+                  // =========================
+
+                  const Text(
+                    "Quick Actions",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    childAspectRatio: 1.1,
+                    children: [
+                      // New Sale
+                      buildCard(
+                        context,
+                        Icons.point_of_sale,
+                        "New Sale",
+                        () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const NewSaleScreen(),
+                            ),
+                          );
+
+                          await loadDashboard();
+                        },
                       ),
-                    );
 
-                    await loadDashboard();
-                  },
-                ),
+                      // Products
+                      buildCard(
+                        context,
+                        Icons.inventory,
+                        "Products",
+                        () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProductsScreen(),
+                            ),
+                          );
 
-                // Stock History
-                buildCard(
-                  context,
-                  Icons.history,
-                  "Stock Movement History",
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StockMovementScreen(),
+                          await loadDashboard();
+                        },
                       ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
+
+                      // Sales History
+                      buildCard(
+                        context,
+                        Icons.receipt_long,
+                        "Sales History",
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SalesHistoryScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Customers
+                      buildCard(
+                        context,
+                        Icons.people,
+                        "Customers",
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CustomersScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Suppliers
+                      buildCard(
+                        context,
+                        Icons.business,
+                        "Suppliers",
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SuppliersScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Receive Stock
+                      buildCard(
+                        context,
+                        Icons.inventory_2,
+                        "Receive Stock",
+                        () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ReceiveStockScreen(),
+                            ),
+                          );
+
+                          await loadDashboard();
+                        },
+                      ),
+
+                      // Stock Movement History
+                      buildCard(
+                        context,
+                        Icons.history,
+                        "Stock Movement History",
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const StockMovementScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Low Stock
+                      buildCard(
+                        context,
+                        Icons.warning_amber,
+                        "Low Stock",
+                        openLowStock,
+                      ),
+
+                      // Reports
+                      buildCard(
+                        context,
+                        Icons.bar_chart,
+                        "Reports",
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Reports module coming soon",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Settings
+                      buildCard(
+                        context,
+                        Icons.settings,
+                        "Settings",
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Settings module coming soon",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
       ),
     );
   }
