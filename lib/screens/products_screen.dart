@@ -500,8 +500,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
               const SizedBox(height: 12),
 
               // =========================
-              // BUTTONS
-              // =========================
+// BUTTONS
+// =========================
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -510,11 +510,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     onPressed: () {
                       editProduct(product);
                     },
-                    icon: const Icon(
-                      Icons.edit,
-                    ),
-                    label: const Text(
-                      "Edit",
+                    icon: const Icon(Icons.edit),
+                    label: const Text("Edit"),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 44),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -526,18 +528,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       Icons.delete,
                       color: Colors.red,
                     ),
-                    label: const Text(
-                      "Delete",
-                      style: TextStyle(
-                        color: Colors.red,
+                    label: const Text("Delete"),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 44),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
                       ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 4),
-
               // =========================
               // TAP HINT
               // =========================

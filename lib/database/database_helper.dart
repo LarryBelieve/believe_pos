@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -129,6 +129,20 @@ class DatabaseHelper {
         stockBefore INTEGER NOT NULL DEFAULT 0,
         stockAfter INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (productId) REFERENCES products(id)
+      )
+    ''');
+
+    // =========================
+    // EXPENSES
+    // =========================
+    await db.execute('''
+      CREATE TABLE expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        amount REAL NOT NULL,
+        category TEXT NOT NULL,
+        note TEXT,
+        expenseDate TEXT NOT NULL
       )
     ''');
   }
@@ -267,6 +281,23 @@ class DatabaseHelper {
       await db.execute('''
         ALTER TABLE stock_movements
         ADD COLUMN stockAfter INTEGER NOT NULL DEFAULT 0
+      ''');
+    }
+
+    // =========================
+    // VERSION 10
+    // EXPENSES
+    // =========================
+    if (oldVersion < 10) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          amount REAL NOT NULL,
+          category TEXT NOT NULL,
+          note TEXT,
+          expenseDate TEXT NOT NULL
+        )
       ''');
     }
   }

@@ -12,6 +12,7 @@ import 'receive_stock_screen.dart';
 import 'stock_movement_screen.dart';
 import 'low_stock_screen.dart';
 import 'reports_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -466,12 +467,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         Icons.settings,
                         "Settings",
-                        () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "Settings module coming soon",
-                              ),
+                        () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsScreen(),
                             ),
                           );
                         },

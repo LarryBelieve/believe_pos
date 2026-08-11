@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'themes/app_theme.dart'; // Make sure this import is correct
+
+import 'themes/app_theme.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -12,11 +13,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'POS System',
-      theme: AppTheme.light, // ✅ Changed from lightTheme to light
-      darkTheme: AppTheme.dark, // ✅ Changed from darkTheme to dark
-      themeMode: ThemeMode.system,
+      title: 'Believe POS',
+
+      // Believe POS theme
+      theme: AppTheme.light,
+
+      // Dark Believe POS theme
+      darkTheme: AppTheme.dark,
+
+      // Always use the Believe POS dark design
+      themeMode: ThemeMode.dark,
+
       home: const HomeScreen(),
+
       debugShowCheckedModeBanner: false,
     );
   }
