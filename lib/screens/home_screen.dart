@@ -11,6 +11,7 @@ import 'suppliers_screen.dart';
 import 'receive_stock_screen.dart';
 import 'stock_movement_screen.dart';
 import 'low_stock_screen.dart';
+import 'reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -451,11 +452,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.bar_chart,
                         "Reports",
                         () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "Reports module coming soon",
-                              ),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ReportsScreen(),
                             ),
                           );
                         },
